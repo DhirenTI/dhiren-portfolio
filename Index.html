@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dhiren Jakhariya | Unity & XR Developer</title>
+
+  <!-- Google font (optional, will fall back to system fonts when offline) -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg-1: #071027;
+      --bg-2: #0b1522;
+      --blue: #3B82F6;
+      --red:  #FF4B4B;
+      --muted: #E5E7EB;
+      --card: rgba(255,255,255,0.04);
+      --glass: rgba(255,255,255,0.03);
+      --accent-grad: linear-gradient(90deg,var(--blue),var(--red));
+    }
+
+    /* Base */
+    html,body{height:100%; margin:0; font-family: 'Montserrat', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: linear-gradient(180deg,var(--bg-1),var(--bg-2)); color:var(--muted); -webkit-font-smoothing:antialiased;}
+    a{color:var(--blue); text-decoration:none}
+    img{max-width:100%; display:block}
+
+    /* container */
+    .wrap{max-width:1200px; margin:0 auto; padding:28px;}
+
+    /* interactive overlay (cursor-follow) */
+    #interactive-overlay{
+      position:fixed; inset:0; pointer-events:none; z-index:5;
+      background: radial-gradient(circle at 50% 50%, rgba(59,130,246,0.10), rgba(255,75,75,0.10));
+      transition: background 0.18s linear;
+      mix-blend-mode: overlay;
+    }
+
+    /* cursor accent line */
+    #cursor-line{ position:fixed; left:0; top:0; bottom:0; width:4px; background: linear-gradient(to bottom,var(--blue),var(--red)); transform:translateX(-40px); transition:transform .08s linear; pointer-events:none; z-index:6; opacity:0.85 }
+
+    /* nav */
+    header{position:relative; z-index:10}
+    nav{display:flex; align-items:center; justify-content:space-between; gap:16px}
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{width:48px; height:48px; border-radius:12px; background:var(--accent-grad); display:flex; align-items:center; justify-content:center; font-weight:800; color:#071027; box-shadow:0 8px 30px rgba(0,0,0,0.5)}
+    .nav-links{display:flex; gap:18px; align-items:center}
+    .btn-primary{background:var(--accent-grad); color:#071027; padding:10px 16px; border-radius:10px; font-weight:600}
+
+    /* hero */
+    .hero{display:grid; grid-template-columns: 1fr 1fr; gap:30px; align-items:center; padding:48px 0; position:relative; z-index:2;}
+    .hero-left h1{font-size:36px; margin:0 0 6px 0; line-height:1.02}
+    .name-gradient{background:linear-gradient(90deg,var(--blue),var(--red)); -webkit-background-clip:text; background-clip:text; color:transparent}
+    .tagline{font-style:italic; color:var(--red); margin:6px 0 18px 0}
+    .hero-ctas{display:flex; gap:12px; margin-top:12px}
+    .btn-ghost{padding:10px 16px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04)}
+
+    /* hero image frame */
+    .frame{border-radius:18px; overflow:hidden; box-shadow:0 30px 80px rgba(2,6,23,0.6); transform:translateZ(0); will-change:transform}
+    .frame .meta{position:absolute; right:14px; bottom:12px; background:rgba(0,0,0,0.45); padding:6px 8px; border-radius:8px; font-size:12px; color:#d1d5db}
+
+    /* sections */
+    section{padding:56px 0}
+    h2{font-size:26px; margin:0 0 14px 0}
+    p.lead{color:#cbd5e1; line-height:1.75}
+
+    /* two column about */
+    .about-grid{display:grid; grid-template-columns:1fr 420px; gap:28px; align-items:start}
+    .skills{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:14px}
+    .skill-pill{background:var(--card); padding:10px;border-radius:10px; font-size:14px; color:#e6eefc}
+
+    /* projects */
+    .projects-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px}
+    .project{background:var(--glass); border-radius:14px; overflow:hidden; transition:transform .28s ease, box-shadow .28s ease}
+    .project:hover{transform:translateY(-8px); box-shadow:0 30px 60px rgba(0,0,0,0.6)}
+    .project .meta{padding:12px}
+
+    /* contact */
+    .contact-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px}
+    form input, form textarea{width:100%; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:var(--muted); margin-top:8px}
+    .submit{background:var(--accent-grad); color:#071027; padding:12px 14px; border-radius:10px; margin-top:10px; border:none; cursor:pointer}
+
+    /* footer */
+    footer{padding:28px 0; text-align:center; color:#94a3b8}
+
+    /* small screens */
+    @media (max-width:900px){
+      .hero{grid-template-columns:1fr; text-align:left}
+      .about-grid{grid-template-columns:1fr}
+      .contact-grid{grid-template-columns:1fr}
+      .nav-links{display:none}
+      #cursor-line{display:none}
+    }
+
+    /* animations (fade-up) */
+    .fade-up{opacity:0; transform: translateY(30px); transition:all .7s cubic-bezier(.2,.9,.2,1)}
+    .fade-up.show{opacity:1; transform:none}
+  </style>
+</head>
+<body>
+
+  <!-- Interactive overlay + cursor accent -->
+  <div id="interactive-overlay"></div>
+  <div id="cursor-line"></div>
+
+  <header class="wrap" role="banner" aria-label="Main header">
+    <nav>
+      <div class="brand">
+        <div class="logo">DJ</div>
+        <div>
+          <div style="font-weight:700">Dhiren Jakhariya</div>
+          <div style="font-size:12px;color:#94a3b8">Unity 3D Developer · AR/VR/XR Creator</div>
+        </div>
+      </div>
+
+      <div class="nav-links" role="navigation" aria-label="Primary">
+        <a href="#about">About</a>
+        <a href="#projects">Portfolio</a>
+        <a href="#contact" class="btn-primary">Contact</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <main>
+    <section class="wrap hero" aria-label="Introduction">
+      <div class="hero-left fade-up">
+        <h1>Hi — I’m <span class="name-gradient">Dhiren Jakhariya</span></h1>
+        <div class="tagline">Unity 3D Developer | AR/VR/XR Creator | Experience Builder</div>
+        <p class="lead">
+          I design immersive experiences for Oculus, WebGL and AR platforms — mixing storytelling with performance, editor tooling, and production-ready systems.
+        </p>
+
+        <div class="hero-ctas">
+          <a class="btn-ghost" href="#projects">View Projects</a>
+          <a class="btn-primary" href="#contact">Hire Me</a>
+        </div>
+
+        <div style="margin-top:18px; color:#94a3b8; font-size:13px">
+          <strong>Tech:</strong> Unity (URP/HDRP) · AVPro · Firebase · AR Foundation · Vuforia · C#
+        </div>
+      </div>
+
+      <div class="hero-right fade-up" style="justify-self:center;">
+        <div class="frame" style="position:relative;">
+          <!-- Replace the image path with your own -->
+          <img src="images/hero.jpg" alt="VR preview" style="height:360px; width:520px; object-fit:cover;" />
+          <div class="meta">Oculus Quest 3 • AVPro</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="wrap" aria-label="About">
+      <div class="about-grid">
+        <div class="fade-up">
+          <h2 style="color:var(--blue)">About Me</h2>
+          <p class="lead">
+            Hey, I’m <strong>Dhiren Jakhariya</strong> — a Unity 3D Developer with 6+ years building AR/VR/MR/XR & WebAR experiences.
+            I craft immersive products for education, e-commerce, museums and multiplayer social experiences.
+          </p>
+
+          <p>
+            I build performance-first systems — editor tooling, video playback optimizations (AVPro), native-Unity bridges (Android/iOS),
+            and robust cloud-backed asset pipelines (Firebase). I enjoy pushing art and code together to create emotional, high-quality experiences.
+          </p>
+
+          <div class="skills" aria-hidden="true">
+            <div class="skill-pill">Unity (URP/HDRP)</div>
+            <div class="skill-pill">Oculus SDK / XR</div>
+            <div class="skill-pill">AVPro • Video</div>
+            <div class="skill-pill">Firebase & Caching</div>
+          </div>
+        </div>
+
+        <div class="fade-up" style="align-self:start;">
+          <div style="border-radius:16px; overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,0.6)" class="parallax-img">
+            <img src="images/about.jpg" alt="Project screenshot" style="height:320px; width:100%; object-fit:cover;">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VISION -->
+    <section class="wrap" aria-label="Vision & Mission">
+      <div class="fade-up">
+        <h2 style="color:var(--blue)">Vision & Mission</h2>
+        <p class="lead">
+          My vision is to expand the boundaries of reality through technology — crafting digital worlds that inspire curiosity, emotion, and connection.
+          Through Unity and XR, my mission is to transform ideas into living experiences that educate, entertain, and elevate.
+        </p>
+      </div>
+    </section>
+
+    <!-- PERSONAL PHILOSOPHY -->
+    <section class="wrap" aria-label="Personal Philosophy">
+      <div class="fade-up">
+        <h2 style="color:var(--red)">Personal Philosophy</h2>
+        <p class="lead">
+          Creativity is a reflection of consciousness. Every line of code, shader, or animation carries intention — I build with awareness and authenticity.
+          Technology is a bridge between the seen and unseen; I aim to create experiences that awaken something deeper.
+        </p>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects" class="wrap" aria-label="Portfolio">
+      <div class="fade-up">
+        <h2 style="color:var(--blue)">Selected Projects</h2>
+        <div class="projects-grid" style="margin-top:18px;">
+          <!-- Project 1 -->
+          <article class="project">
+            <img src="images/project1.jpg" alt="Project 1 preview" />
+            <div class="meta" style="padding:12px;">
+              <strong>VR Museum Experience</strong>
+              <div style="color:#94a3b8; font-size:13px; margin-top:6px">Unity • AVPro • Multiplayer</div>
+            </div>
+          </article>
+
+          <!-- Project 2 -->
+          <article class="project">
+            <img src="images/project2.jpg" alt="Project 2 preview" />
+            <div class="meta" style="padding:12px;">
+              <strong>AR Navigation App</strong>
+              <div style="color:#94a3b8; font-size:13px; margin-top:6px">AR Foundation • Geolocation</div>
+            </div>
+          </article>
+
+          <!-- Project 3 -->
+          <article class="project">
+            <img src="images/project3.jpg" alt="Project 3 preview" />
+            <div class="meta" style="padding:12px;">
+              <strong>Interactive E-Commerce</strong>
+              <div style="color:#94a3b8; font-size:13px; margin-top:6px">Unity • WebGL • Firebase</div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="wrap" aria-label="Contact">
+      <div class="fade-up">
+        <h2 style="color:var(--red)">Get in touch</h2>
+        <div style="margin-top:18px;" class="contact-grid">
+          <div>
+            <p class="lead">Looking for collaboration or contract work? Send me a message and I’ll reply within a few business days.</p>
+            <p style="color:#94a3b8"><strong>Email:</strong> dhiren@example.com</p>
+            <p style="color:#94a3b8"><strong>GitHub:</strong> @your-github</p>
+            <p style="color:#94a3b8"><strong>LinkedIn:</strong> /in/your-linkedin</p>
+          </div>
+
+          <form onsubmit="event.preventDefault(); alert('Message sent (demo)');" aria-label="Contact form">
+            <label style="font-size:13px;color:#94a3b8">Name</label>
+            <input type="text" placeholder="Your name" required />
+
+            <label style="font-size:13px;color:#94a3b8; margin-top:8px">Email</label>
+            <input type="email" placeholder="you@domain.com" required />
+
+            <label style="font-size:13px;color:#94a3b8; margin-top:8px">Message</label>
+            <textarea placeholder="Tell me about your project..." rows="6" required></textarea>
+
+            <button class="submit" type="submit">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      © <span id="year"></span> Dhiren Jakhariya — Built with Unity energy & web tech.
+    </div>
+  </footer>
+
+  <!-- Inline JS: animations, parallax, cursor overlay -->
+  <script>
+    // set year
+    document.getElementById('year').innerText = new Date().getFullYear();
+
+    // fade-up on scroll using IntersectionObserver
+    const faders = document.querySelectorAll('.fade-up');
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(ent => {
+        if(ent.isIntersecting){ ent.target.classList.add('show'); obs.unobserve(ent.target); }
+      });
+    }, {threshold: 0.18});
+    faders.forEach(f => observer.observe(f));
+
+    // parallax image simple
+    const parallaxImgs = document.querySelectorAll('.parallax-img img');
+    window.addEventListener('scroll', () => {
+      const s = window.scrollY;
+      parallaxImgs.forEach(i => { i.style.transform = 'translateY(' + (s * 0.08) + 'px)'; });
+    });
+
+    // cursor-follow overlay
+    const overlay = document.getElementById('interactive-overlay');
+    const cursorLine = document.getElementById('cursor-line');
+    document.addEventListener('mousemove', (e) => {
+      const xPct = (e.clientX / window.innerWidth) * 100;
+      const yPct = (e.clientY / window.innerHeight) * 100;
+      overlay.style.background = `radial-gradient(circle at ${xPct}% ${yPct}%, rgba(59,130,246,0.12), rgba(255,75,75,0.12))`;
+      // move cursor line across (desktop only)
+      if(window.innerWidth > 900){
+        cursorLine.style.transform = `translateX(${e.clientX}px)`;
+      }
+    });
+
+    // reduce motion preference
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if(mq.matches){
+      // disable transforms
+      document.querySelectorAll('.frame, .project, .parallax-img img').forEach(el => el.style.transition = 'none');
+      overlay.style.transition = 'none';
+    }
+
+    // simple accessibility: focus outlines for keyboard users
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Tab'){ document.documentElement.style.scrollBehavior = 'smooth'; document.body.classList.add('keyboard'); }
+    });
+  </script>
+</body>
+</html>
